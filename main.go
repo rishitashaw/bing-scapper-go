@@ -10,7 +10,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
-bringDomains := map[string]string{
+bingDomains := map[string]string{
 	"com":""
 }
 
@@ -39,18 +39,47 @@ func buildBingURLs() string {
 
 }
 
-func scrapeClientRequest{
+func scrapeClientRequest(){
 
 }
 
-func BingScrape{
+func BingScrape(searchTerm string, country string, pages int, count int, backoff int) ([]SearchResult, error) {
+	results := []SearchResult{}
 
+	bingPages, err := buildBingURLs(searchTerm, country, pages, count)
+	
+	if err != nil {
+		return nil, err
+	}
+	
+	for _, page := range bingPages {
+		rank:=len(results)
+		res,err:=scrapeClientRequest(page)
+		if err !=nil{
+			return nil, err
+		}
+		data,err:=bingResultParser(res,rank)
+		if err != nil {
+			return nil, err
+		}
+		for _,result := range data{
+			results=append(results,result)
+		}
+	time.Sleep(time.Duration(backoff)*time.Second)
+	}
 }
 
-func bingResultParser{
+func bingResultParser(){
 
 }
 
 func main() {
-	
+	res,err := BingScrape("rishita shaw", "com",2,30,30)
+	if err == nil {
+		for _,res := range res{
+			fmt.Println(res)
+		}
+	}else{
+		fmt.Println(err)
+	}
 }
