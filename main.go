@@ -123,7 +123,7 @@ func scrapeClientRequest(searchURL string, proxyString interface{}) (*http.Respo
 	return res, nil   
 }
 
-func BingScrape(searchTerm string, proxyString interface{}, country string, pages int, count int, backoff int) ([]SearchResult, error) {
+func BingScrape(searchTerm string,country string, proxyString interface{},  pages int, count int, backoff int) ([]SearchResult, error) {
 	results := []SearchResult{}
 
 	bingPages, err := buildBingURLs(searchTerm, country, pages, count)
@@ -183,7 +183,7 @@ func bingResultParser(response *http.Response, rank int)([]SearchResult, error){
 }
 
 func main() {
-	res,err := BingScrape("rishita shaw",nil, "com",2,30,30)
+	res,err := BingScrape("rishita shaw", "com",nil,1,60,10)
 	if err == nil {
 		for _,res := range res{
 			fmt.Println(res)
