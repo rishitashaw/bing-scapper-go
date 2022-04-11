@@ -32,7 +32,9 @@ var userAgents = []string{
 }
 
 func randomUserAgent() string {
-
+	rand.Seed(time.Now().Unix())
+	randNum:=rand.Int()%len(userAgents)
+	return userAgents[randNum]
 }
 
 func buildBingURLs(searchTerm, country string, pages, count int) ([]string, error) {
@@ -59,11 +61,32 @@ func firstParameter(number, count int) int {
 	return number*count+1
 }
 
-func scrapeClientRequest(){
-
+func getScapeClient(proxyString interface{}) (*http.Client) {
+	switch V:=proxyString.(type){
+		case string:
+			proxyUrl,_:=url.Parse(V)
+			return &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)}}
+		default:
+			return &http.Client{}
+	}
 }
 
-func BingScrape(searchTerm string, country string, pages int, count int, backoff int) ([]SearchResult, error) {
+func scrapeClientRequest(searchURL string, proxyString interface{}) (*http.Response, error) {
+	baseClient:=getScapeClient(proxyString)
+	req, _ := http.NewRequest("GET", searchURL, nil)
+	req.Header.Set("User-Agent", randomUserAgent())
+	res,err:=baseClient.Do(req)
+	if res.StatusCode !=200{
+		err:=fmt.Errorf("status code error: %d %s",res.StatusCode,res.Status)
+		return nil, err
+	}
+	if err != nil {
+		return nil, err
+	}
+	return res, nil   
+}
+
+func BingScrape(searchTerm string, proxyString interface{}, country string, pages int, count int, backoff int) ([]SearchResult, error) {
 	results := []SearchResult{}
 
 	bingPages, err := buildBingURLs(searchTerm, country, pages, count)
@@ -74,7 +97,7 @@ func BingScrape(searchTerm string, country string, pages int, count int, backoff
 	
 	for _, page := range bingPages {
 		rank:=len(results)
-		res,err:=scrapeClientRequest(page)
+		res,err:=scrapeClientRequest(page, proxyString)
 		if err !=nil{
 			return nil, err
 		}
@@ -95,7 +118,7 @@ func bingResultParser(){
 }
 
 func main() {
-	res,err := BingScrape("rishita shaw", "com",2,30,30)
+	res,err := BingScrape("rishita shaw", "com",nil,2,30,30)
 	if err == nil {
 		for _,res := range res{
 			fmt.Println(res)
