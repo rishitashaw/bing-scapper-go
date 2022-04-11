@@ -35,8 +35,28 @@ func randomUserAgent() string {
 
 }
 
-func buildBingURLs() string {
+func buildBingURLs(searchTerm, country string, pages, count int) ([]string, error) {
+toScrape:=[]string{}
+searchTerm=strings.Trim(searchTerm," ")
+searchTerm=strings.Replace(searchTerm," ","+",-1)
+if countryCode, found:= bingDomains[country]; found{
+	for i:=0;i<pages;i++{
+		first:=firstParameter(i,count)
+		scarpeURL:=fmt.Sprintf("http://bing.com/search?q=%s&first=%d&count=%d%s",searchTerm,first,count, countryCode)
+		toScrape=append(toScrape, scarpeURL)
+	}
+}else{
+	fmt.Errorf("country(%s) is not found",country)
+	return nil, err
+}
+return toScrape, nil
+}
 
+func firstParameter(number, count int) int {
+	if number==0{
+		return number+1
+	}
+	return number*count+1
 }
 
 func scrapeClientRequest(){
@@ -67,6 +87,7 @@ func BingScrape(searchTerm string, country string, pages int, count int, backoff
 		}
 	time.Sleep(time.Duration(backoff)*time.Second)
 	}
+	return results, nil
 }
 
 func bingResultParser(){
