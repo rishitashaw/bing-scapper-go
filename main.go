@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 var bingDomains = map[string]string{
@@ -83,7 +85,7 @@ if countryCode, found:= bingDomains[country]; found{
 		toScrape=append(toScrape, scarpeURL)
 	}
 }else{
-	fmt.Errorf("country(%s) is not found",country)
+	err:=fmt.Errorf("country(%s) is not found",country)
 	return nil, err
 }
 return toScrape, nil
@@ -149,12 +151,39 @@ func BingScrape(searchTerm string, proxyString interface{}, country string, page
 }
 
 func bingResultParser(response *http.Response, rank int)([]SearchResult, error){
-
+	doc,err:=goquery.NewDocumentFromResponse(response)
+	if err != nil {
+		return nil, err
+	}
+	results := []SearchResult{}
+	sel := doc.Find("li.b_algo")
+	rank++
+	for i:=range sel.Nodes{
+		item := sel.Eq(i)
+		linkTag := item.Find("a")
+		link, _ := linkTag.Attr("href")
+		titleTag := item.Find("h2")
+		descTag := item.Find("div.b_caption p")
+		desc := descTag.Text()
+		title := titleTag.Text()
+		link = strings.Trim(link, " ")
+		if link != "" && link != "#" && !strings.HasPrefix(link, "/"){
+		result := SearchResult{
+			rank,
+			link,
+			title,
+			desc,
+		}
+		results = append(results, result)
+		rank++
+	}
+	}
+	return results, err
 
 }
 
 func main() {
-	res,err := BingScrape("rishita shaw", "com",nil,2,30,30)
+	res,err := BingScrape("rishita shaw",nil, "com",2,30,30)
 	if err == nil {
 		for _,res := range res{
 			fmt.Println(res)
